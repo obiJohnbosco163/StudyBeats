@@ -1,0 +1,49 @@
+{
+  "info": {
+    "title": "API",
+    "version": "1.0.0",
+    "generatedAt": "2026-07-15T16:34:59.332Z"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "description": "Health check",
+      "authentication": {
+        "required": false
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/pipeline/analyze",
+      "description": "Analyze study text into a short/detailed summary + structured key concepts",
+      "authentication": {
+        "required": false
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/pipeline/learning-package",
+      "description": "Generate flashcards + quiz from study text",
+      "authentication": {
+        "required": false
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/pipeline/lyrics",
+      "description": "Generate educational song lyrics from a content analysis",
+      "authentication": {
+        "required": false
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/pipeline/music",
+      "description": "Generate (mock) music + lyric timestamps from lyrics",
+      "authentication": {
+        "required": false
+      }
+    }
+  ]
+}

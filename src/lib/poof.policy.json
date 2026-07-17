@@ -1,0 +1,280 @@
+{
+  "adminFiles/$fileId": {
+    "type": "storage",
+    "description": "Admin-only file storage",
+    "rules": {
+      "read": "true",
+      "create": "@user.address == @constants.ADMIN_ADDRESS",
+      "update": "false",
+      "delete": "@user.address == @constants.ADMIN_ADDRESS"
+    }
+  },
+  "appFiles/$fileId": {
+    "type": "storage",
+    "description": "App user uploaded files",
+    "rules": {
+      "read": "true",
+      "create": "@user.address != null",
+      "update": "false",
+      "delete": "@user.address == @constants.ADMIN_ADDRESS"
+    }
+  },
+  "commonQueries/$queryId": {
+    "description": "Read-only queries for wallet balances and swap quotes. Supports SOL/USDC/SPL token balance lookups, Jupiter swap quotes, and Meteora dynamic bonding curve quotes.",
+    "operationDetails": {
+      "read": "Anyone can use these queries: (1) Balance queries - check SOL, USDC, or any SPL token balance for any wallet address. (2) Jupiter swap quotes - get expected output amounts for token swaps via Jupiter aggregator. (3) Meteora swap quotes - get expected output amounts for Meteora dynamic bonding curve pools."
+    },
+    "onchain": false,
+    "fields": {},
+    "rules": {
+      "read": "true",
+      "create": "false",
+      "update": "false",
+      "delete": "false"
+    },
+    "queries": {
+      "solBalance": {
+        "description": "Get SOL balance for a wallet address in lamports (1 SOL = 1,000,000,000 lamports). Pass walletAddress as parameter.",
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance(@newData.walletAddress, @constants.SOL)"
+      },
+      "usdcBalance": {
+        "description": "Get USDC balance for a wallet address in base units (1 USDC = 1,000,000 base units with 6 decimals). Pass walletAddress as parameter.",
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance(@newData.walletAddress, @constants.USDC)"
+      },
+      "tokenBalance": {
+        "description": "Get balance for any SPL token mint for a wallet address. Pass walletAddress and tokenMint as parameters. Returns balance in the token's smallest units based on its decimals.",
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance(@newData.walletAddress, @newData.tokenMint)"
+      },
+      "jupiterSwapQuote": {
+        "description": "Get a Jupiter swap quote for exchanging tokens. Pass inputMint (token to sell, use @constants.SOL for native SOL), outputMint (token to buy), and amount (in smallest units like lamports). Returns the expected output amount.",
+        "returnType": "UInt",
+        "query": "@DeFiPlugin.getSwapQuote(@newData.inputMint, @newData.outputMint, @newData.amount)"
+      },
+      "meteoraSwapQuote": {
+        "description": "Get a Meteora dynamic bonding curve swap quote. Pass tokenMintAddress (the pool's base token), tokenToSwapInMintAddress (token to swap in, use @constants.SOL for native SOL), and tokenAmount (in smallest units). Returns the expected output amount.",
+        "returnType": "UInt",
+        "query": "@DeFiPlugin.getMeteoraSwapQuote(@newData.tokenMintAddress, @newData.tokenToSwapInMintAddress, @newData.tokenAmount)"
+      }
+    }
+  },
+  "profiles/$profileId": {
+    "description": "User profile for StudyBeats AI. One per wallet. Readable by any authenticated user; only the owner (address == @user.address) can create/update/delete.",
+    "fields": {
+      "address": "Address",
+      "displayName": "String",
+      "avatarUrl": "String?",
+      "bio": "String?",
+      "plan": "String",
+      "createdAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@user.address != null",
+      "create": "@newData.address == @user.address",
+      "update": "@data.address == @user.address && @newData.address == @user.address",
+      "delete": "@data.address == @user.address"
+    },
+    "operationDetails": {
+      "read": "Any authenticated user (wallet connected) can read profiles. Shows all fields.",
+      "create": "Authenticated users only. The address field must equal @user.address (users create only their own profile). createdAt is Unix seconds.",
+      "update": "Owner only (existing address must equal @user.address). The address field cannot be changed to another wallet.",
+      "delete": "Owner only (address == @user.address)."
+    }
+  },
+  "materials/$materialId": {
+    "description": "An uploaded study document (pdf/docx/txt/text). Owner-scoped: only uploadedBy == @user.address can read/create/update/delete.",
+    "fields": {
+      "title": "String",
+      "fileType": "String",
+      "fileUrl": "String?",
+      "textContent": "String?",
+      "sizeBytes": "UInt?",
+      "uploadedBy": "Address",
+      "status": "String",
+      "createdAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@data.uploadedBy == @user.address",
+      "create": "@newData.uploadedBy == @user.address",
+      "update": "@data.uploadedBy == @user.address && @newData.uploadedBy == @user.address",
+      "delete": "@data.uploadedBy == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner only (uploadedBy == @user.address).",
+      "create": "Authenticated users only. uploadedBy must equal @user.address. createdAt is Unix seconds.",
+      "update": "Owner only. uploadedBy cannot be reassigned to another wallet.",
+      "delete": "Owner only (uploadedBy == @user.address)."
+    }
+  },
+  "songs/$songId": {
+    "description": "An AI-generated educational song (placeholder data for MVP; generation engine deferred). Owner-scoped by createdBy.",
+    "fields": {
+      "title": "String",
+      "materialId": "String?",
+      "genre": "String",
+      "vocalStyle": "String",
+      "durationSec": "UInt",
+      "audioUrl": "String?",
+      "lyrics": "String?",
+      "coverUrl": "String?",
+      "status": "String",
+      "createdBy": "Address",
+      "createdAt": "UInt",
+      "lyricsTimestamps": "String?",
+      "generationError": "String?"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@data.createdBy == @user.address",
+      "create": "@newData.createdBy == @user.address",
+      "update": "@data.createdBy == @user.address && @newData.createdBy == @user.address",
+      "delete": "@data.createdBy == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner only (createdBy == @user.address).",
+      "create": "Authenticated users only. createdBy must equal @user.address. durationSec is required (pass 0 for placeholders). audioUrl/lyrics/coverUrl are optional placeholders. createdAt is Unix seconds. Optional: lyricsTimestamps (JSON array of {line,tSec} for synced lyrics), generationError (human-readable error message for retry UX).",
+      "update": "Owner only. createdBy cannot be reassigned to another wallet. lyricsTimestamps and generationError are optional and updatable by the owner.",
+      "delete": "Owner only (createdBy == @user.address)."
+    }
+  },
+  "playlists/$playlistId": {
+    "description": "A user-created playlist. Owner-scoped by createdBy. Song membership is stored in the playlistSongs subcollection.",
+    "fields": {
+      "name": "String",
+      "description": "String?",
+      "coverUrl": "String?",
+      "createdBy": "Address",
+      "createdAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@data.createdBy == @user.address",
+      "create": "@newData.createdBy == @user.address",
+      "update": "@data.createdBy == @user.address && @newData.createdBy == @user.address",
+      "delete": "@data.createdBy == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner only (createdBy == @user.address).",
+      "create": "Authenticated users only. createdBy must equal @user.address. Add songs via the playlistSongs subcollection. createdAt is Unix seconds.",
+      "update": "Owner only. createdBy cannot be reassigned to another wallet.",
+      "delete": "Owner only (createdBy == @user.address)."
+    }
+  },
+  "playlists/$playlistId/playlistSongs/$entryId": {
+    "description": "A song entry within a playlist. Owner is inherited from the parent playlist (createdBy == @user.address). Use $entryId = songId to keep one entry per song.",
+    "fields": {
+      "songId": "String",
+      "position": "UInt",
+      "addedAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "get(/playlists/$playlistId).createdBy == @user.address",
+      "create": "get(/playlists/$playlistId).createdBy == @user.address",
+      "update": "get(/playlists/$playlistId).createdBy == @user.address",
+      "delete": "get(/playlists/$playlistId).createdBy == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner of the parent playlist only.",
+      "create": "Owner of the parent playlist only (playlist.createdBy == @user.address). songId references a song; position orders the entry; addedAt is Unix seconds.",
+      "update": "Owner of the parent playlist only (e.g. to reorder position).",
+      "delete": "Owner of the parent playlist only (removes the song from the playlist)."
+    }
+  },
+  "favorites/$favoriteId": {
+    "description": "A favorited song for a user. Owner-scoped by userId.",
+    "fields": {
+      "userId": "Address",
+      "songId": "String",
+      "createdAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@data.userId == @user.address",
+      "create": "@newData.userId == @user.address",
+      "update": "@data.userId == @user.address && @newData.userId == @user.address",
+      "delete": "@data.userId == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner only (userId == @user.address).",
+      "create": "Authenticated users only. userId must equal @user.address. songId references a song document. createdAt is Unix seconds.",
+      "update": "Owner only. userId cannot be reassigned to another wallet.",
+      "delete": "Owner only (userId == @user.address)."
+    }
+  },
+  "studySessions/$sessionId": {
+    "description": "A focus/study session grouping songs. Owner-scoped by createdBy. Song membership is stored in the sessionSongs subcollection.",
+    "fields": {
+      "name": "String",
+      "durationSec": "UInt?",
+      "createdBy": "Address",
+      "createdAt": "UInt",
+      "materialId": "String?",
+      "status": "String?",
+      "shortSummary": "String?",
+      "detailedSummary": "String?",
+      "keyConcepts": "String?",
+      "flashcards": "String?",
+      "quiz": "String?"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@data.createdBy == @user.address",
+      "create": "@newData.createdBy == @user.address",
+      "update": "@data.createdBy == @user.address && @newData.createdBy == @user.address",
+      "delete": "@data.createdBy == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner only (createdBy == @user.address).",
+      "create": "Authenticated users only. createdBy must equal @user.address. Add songs via the sessionSongs subcollection. createdAt is Unix seconds. Optional Learning Package fields: materialId (source material), status ('generating'|'ready'|'failed'), shortSummary, detailedSummary, keyConcepts (JSON array), flashcards (JSON array of {question,answer}), quiz (JSON array of {question,options,answerIndex,explanation}).",
+      "update": "Owner only. createdBy cannot be reassigned to another wallet. Optional Learning Package fields can be updated by the owner.",
+      "delete": "Owner only (createdBy == @user.address)."
+    }
+  },
+  "studySessions/$sessionId/sessionSongs/$entryId": {
+    "description": "A song entry within a study session. Owner is inherited from the parent session (createdBy == @user.address). Use $entryId = songId to keep one entry per song.",
+    "fields": {
+      "songId": "String",
+      "position": "UInt",
+      "addedAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "get(/studySessions/$sessionId).createdBy == @user.address",
+      "create": "get(/studySessions/$sessionId).createdBy == @user.address",
+      "update": "get(/studySessions/$sessionId).createdBy == @user.address",
+      "delete": "get(/studySessions/$sessionId).createdBy == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner of the parent session only.",
+      "create": "Owner of the parent session only (session.createdBy == @user.address). songId references a song; position orders the entry; addedAt is Unix seconds.",
+      "update": "Owner of the parent session only (e.g. to reorder position).",
+      "delete": "Owner of the parent session only (removes the song from the session)."
+    }
+  },
+  "history/$historyId": {
+    "description": "Playback history entry. Owner-scoped by userId; immutable once created.",
+    "fields": {
+      "userId": "Address",
+      "songId": "String",
+      "playedAt": "UInt"
+    },
+    "onchain": false,
+    "rules": {
+      "read": "@data.userId == @user.address",
+      "create": "@newData.userId == @user.address",
+      "update": "false",
+      "delete": "@data.userId == @user.address"
+    },
+    "operationDetails": {
+      "read": "Owner only (userId == @user.address).",
+      "create": "Authenticated users only. userId must equal @user.address. playedAt is Unix seconds.",
+      "update": "Operation disallowed. History entries are immutable once recorded.",
+      "delete": "Owner only (userId == @user.address) can remove their own history entries."
+    }
+  }
+}

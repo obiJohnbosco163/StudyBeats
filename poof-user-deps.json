@@ -1,0 +1,6 @@
+{
+  "frontend": {
+    "pdfjs-dist": "6.1.200",
+    "mammoth": "1.12.0"
+  }
+}
