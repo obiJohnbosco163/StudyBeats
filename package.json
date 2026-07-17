@@ -21,8 +21,8 @@
   },
   "scripts": {
     "dev": "bunx --bun vite --port $PORT",
-    "lint": "bun eslint src --ignore-pattern 'src/components/ui/' --report-unused-disable-directives-severity warn --quiet",
-    "check-types": "bun tsc --project tsconfig.app.json --noEmit",
+    "lint": "bunx eslint src --ignore-pattern 'src/components/ui/' --report-unused-disable-directives-severity warn --quiet",
+    "check-types": "bunx tsc --project tsconfig.app.json --noEmit",
     "check": "bunx concurrently --kill-others-on-fail --names \"lint,tsc\" \"bun run lint\" \"bun run check-types\"",
     "build": "export VITE_TAROBASE_APP_ID=6a5696b094dafa160d33ba98 && export VITE_CHAIN=offchain && export VITE_RPC_URL=https://celestia-cegncv-fast-mainnet.helius-rpc.com && export VITE_ENV=PREVIEW && bun run check && bun run build.ts",
     "build:api": "cd partyserver && bun run build",
@@ -32,8 +32,8 @@
     "build:prod:manual": "export VITE_ENV=LIVE && export BUILD_PROFILE=production && bun run check && bun run build.ts",
     "setup-lint": "echo 'Lint tools ready via bun'",
     "preview": "bunx --bun vite preview",
-    "format": "bun prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "bun eslint src --ignore-pattern 'src/components/ui/' --report-unused-disable-directives-severity warn --quiet",
+    "format": "bunx prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "lint:fix": "bunx eslint src --ignore-pattern 'src/components/ui/' --report-unused-disable-directives-severity warn --quiet",
     "clean": "rm -rf node_modules dist && find src -type f -name '*.js' ! -name '*.config.js' ! -name 'vite-env.d.ts' -delete",
     "build:full": "bunx concurrently \"bun run build\" \"bun run build:api\"",
     "build:full:prod": "bunx concurrently \"bun run build:prod\" \"bun run build:api\""
